@@ -1,7 +1,8 @@
 import asyncio
 import logging
-from app.db.session import engine, Base
-from app.models.document import Document
+from app.db.session import engine
+from app.db.base import Base
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
