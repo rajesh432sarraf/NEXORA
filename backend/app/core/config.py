@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # Validation
     MAX_UPLOAD_SIZE: int = 15 * 1024 * 1024  # 15 MB limit
 
+    # AI
+    GEMINI_API_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env", 
         env_file_encoding="utf-8", 

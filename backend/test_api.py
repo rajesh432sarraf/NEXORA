@@ -28,16 +28,25 @@ if response.status_code == 200:
     print(f"Document uploaded. ID: {doc_id}")
     
     # Poll for status
-    for i in range(10):
+    for i in range(5):
         time.sleep(2)
         get_url = f"http://127.0.0.1:8001/api/v1/documents/{doc_id}"
         res = requests.get(get_url)
         if res.status_code == 200:
             current_status = res.json().get("status")
-            print(f"Polling [{i+1}/10] Status: {current_status}")
-            if current_status in ["COMPLETED", "FAILED"]:
+            print(f"Polling [{i+1}/5] Status: {current_status}")
+            if current_status in ["EXTRACTED", "FAILED"]:
                 print("Final Document Data:")
-                print(json.dumps(res.json(), indent=2))
                 break
         else:
             print("Error polling:", res.text)
+            
+    print("Testing Parse Endpoint...")
+    parse_url = f"http://127.0.0.1:8001/api/v1/documents/{doc_id}/parse"
+    parse_res = requests.post(parse_url)
+    
+    if parse_res.status_code == 200:
+        print("Parse Successful! Structured JSON:")
+        print(json.dumps(parse_res.json(), indent=2))
+    else:
+        print("Parse Failed:", parse_res.text)
