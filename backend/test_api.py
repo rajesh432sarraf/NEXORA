@@ -16,7 +16,7 @@ pdf.output("dummy_spec.pdf")
 print("Created dummy_spec.pdf")
 
 # Upload the PDF
-url = "http://127.0.0.1:8000/api/v1/documents/upload"
+url = "http://127.0.0.1:8001/api/v1/documents/upload"
 files = {'file': open('dummy_spec.pdf', 'rb')}
 response = requests.post(url, files=files)
 
@@ -30,7 +30,7 @@ if response.status_code == 200:
     # Poll for status
     for i in range(10):
         time.sleep(2)
-        get_url = f"http://127.0.0.1:8000/api/v1/documents/{doc_id}"
+        get_url = f"http://127.0.0.1:8001/api/v1/documents/{doc_id}"
         res = requests.get(get_url)
         if res.status_code == 200:
             current_status = res.json().get("status")

@@ -5,8 +5,7 @@ asyncpg
 alembic
 pydantic-settings
 pymupdf
-google-generativeai
+pdfplumber
 python-multipart
 psycopg2-binary
-faiss-cpu
-numpy
+aiosqlite

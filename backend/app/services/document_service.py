@@ -6,20 +6,17 @@ from sqlalchemy import select
 from app.models.document import Document
 from app.services.storage_service import StorageService
 from app.services.extraction_service import ExtractionService
-from app.services.llm_service import LLMService
-from app.services.embedding_service import EmbeddingService
 
 logger = logging.getLogger(__name__)
-embedding_service = EmbeddingService()
 
 class DocumentService:
     @staticmethod
-    async def process_document_pipeline(document_id: str, db: AsyncSession):
+    async def process_document_synchronously(document_id: str, db: AsyncSession):
         """
-        Background task pipeline to extract text, get metadata via LLM, and generate embeddings.
+        Synchronously extracts text and updates the database status.
         """
         try:
-            # 1. Fetch document record
+            # Fetch document record
             stmt = select(Document).where(Document.id == document_id)
             result = await db.execute(stmt)
             document = result.scalar_one_or_none()
@@ -28,23 +25,15 @@ class DocumentService:
                 logger.error(f"Document {document_id} not found for processing.")
                 return
 
-            # Update status to PROCESSING
-            document.status = "PROCESSING"
-            await db.commit()
-
-            # 2. Extract Text
+            # Extract Text
             text = ExtractionService.extract_text_from_pdf(document.file_path)
             document.extracted_text = text
             
-            # 3. Extract Metadata via Gemini
-            metadata = await LLMService.extract_metadata(text)
-            document.metadata_json = metadata
-            
-            # 4. Generate Embeddings and store in FAISS
-            await embedding_service.generate_and_store_embedding(document_id, text)
-            
-            # Update status to COMPLETED
-            document.status = "COMPLETED"
+            # Update status
+            document.status = "EXTRACTED" if text else "FAILED"
+            if not text:
+                document.error_message = "No text could be extracted from the PDF."
+                
             await db.commit()
             logger.info(f"Successfully processed document {document_id}")
             

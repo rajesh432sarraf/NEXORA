@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, Depends, BackgroundTasks, HTTPException
+from typing import List
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -12,7 +13,6 @@ router = APIRouter()
 
 @router.post("/upload", response_model=DocumentResponse)
 async def upload_document(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db)
 ):
@@ -20,13 +20,14 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
         
     try:
-        # Save file
-        file_path = await StorageService.save_upload_file(file)
+        # Save file and get size
+        file_path, file_size = await StorageService.save_upload_file(file)
         
         # Create DB record
         db_document = Document(
             filename=file.filename,
-            content_type=file.content_type,
+            content_type=file.content_type or "application/pdf",
+            file_size=file_size,
             file_path=file_path,
             status="PENDING"
         )
@@ -34,11 +35,14 @@ async def upload_document(
         await db.commit()
         await db.refresh(db_document)
         
-        # Trigger background processing
-        background_tasks.add_task(DocumentService.process_document_pipeline, db_document.id, db)
+        # Process document synchronously to return text preview
+        await DocumentService.process_document_synchronously(db_document.id, db)
+        await db.refresh(db_document) # Refresh to get extracted_text and updated status
         
         return db_document
         
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -55,3 +59,14 @@ async def get_document(
         raise HTTPException(status_code=404, detail="Document not found")
         
     return document
+
+@router.get("/", response_model=List[DocumentResponse])
+async def list_documents(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(Document).offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    documents = result.scalars().all()
+    return documents
