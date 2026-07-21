@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     # AI
     GEMINI_API_KEY: str = ""
+    
+    # Vector DB
+    FAISS_INDEX_PATH: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "storage", "faiss_index.bin")
+    FAISS_MAPPING_PATH: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "storage", "faiss_mapping.json")
 
     model_config = SettingsConfigDict(
         env_file=".env", 

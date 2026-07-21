@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Query, status
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Query, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -11,9 +11,11 @@ from app.schemas.parsed_document import ParsedDocument
 from app.services.storage_service import StorageService
 from app.services.document_service import DocumentService
 from app.services.document_engine.parser_service import ParserService
+from app.services.document_engine.search_service import SearchService
 
 router = APIRouter()
 parser_service = ParserService()
+search_service = SearchService()
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
@@ -114,17 +116,55 @@ async def list_documents(
 @router.post("/{document_id}/parse", response_model=ParsedDocument)
 async def parse_document(
     document_id: str,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Parses the extracted text of a document into structured JSON using Gemini.
+    Also queues a background task to ingest the document into FAISS for semantic search.
     """
     try:
+        # 1. Parse Document via Gemini
         parsed_data = await parser_service.parse_document(document_id, db)
+        
+        # 2. Fetch the text to ingest
+        stmt = select(Document).where(Document.id == document_id)
+        result = await db.execute(stmt)
+        document = result.scalar_one_or_none()
+        
+        if document and document.extracted_text:
+            # Queue ingestion into FAISS
+            background_tasks.add_task(
+                search_service.ingest_document, 
+                text=document.extracted_text, 
+                document_id=document.id, 
+                metadata=parsed_data.model_dump()
+            )
+            
         return parsed_data
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+@router.post("/{document_id}/ingest")
+async def ingest_document(
+    document_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Directly ingests a document into FAISS (useful for testing when Gemini is unavailable).
+    """
+    stmt = select(Document).where(Document.id == document_id)
+    result = await db.execute(stmt)
+    document = result.scalar_one_or_none()
+    
+    if not document or not document.extracted_text:
+        raise HTTPException(status_code=404, detail="Document not found or no text available.")
+        
+    search_service.ingest_document(
+        text=document.extracted_text,
+        document_id=document.id,
+        metadata={"source": "manual_ingest"}
+    )
+    return {"message": "Ingestion complete"}

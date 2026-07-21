@@ -50,3 +50,25 @@ if response.status_code == 200:
         print(json.dumps(parse_res.json(), indent=2))
     else:
         print("Parse Failed:", parse_res.text)
+
+    print("\nTesting Manual Ingestion...")
+    ingest_url = f"http://127.0.0.1:8001/api/v1/documents/{doc_id}/ingest"
+    ingest_res = requests.post(ingest_url)
+    if ingest_res.status_code == 200:
+        print("Ingestion Successful!")
+    else:
+        print("Ingestion Failed:", ingest_res.text)
+        
+    print("\nTesting Search Endpoint...")
+    search_url = "http://127.0.0.1:8001/api/v1/documents/search"
+    search_payload = {
+        "query": "HVAC units",
+        "top_k": 2
+    }
+    search_res = requests.post(search_url, json=search_payload)
+    
+    if search_res.status_code == 200:
+        print("Search Successful! Results:")
+        print(json.dumps(search_res.json(), indent=2))
+    else:
+        print("Search Failed:", search_res.text)
