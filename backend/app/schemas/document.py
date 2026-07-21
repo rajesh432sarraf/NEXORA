@@ -6,9 +6,13 @@ class DocumentBase(BaseModel):
     filename: str
     content_type: str
     file_size: int
+    project_id: Optional[str] = None
 
 class DocumentCreate(DocumentBase):
     file_path: str
+
+class DocumentUpdate(BaseModel):
+    project_id: Optional[str] = None
 
 class DocumentResponse(DocumentBase):
     id: str
@@ -28,3 +32,4 @@ class DocumentResponse(DocumentBase):
         return None
 
     model_config = ConfigDict(from_attributes=True)
+
