@@ -6,10 +6,13 @@ from sqlalchemy import select
 from app.db.session import get_db
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
+from app.schemas.parsed_document import ParsedDocument
 from app.services.storage_service import StorageService
 from app.services.document_service import DocumentService
+from app.services.document_engine.parser_service import ParserService
 
 router = APIRouter()
+parser_service = ParserService()
 
 @router.post("/upload", response_model=DocumentResponse)
 async def upload_document(
@@ -70,3 +73,20 @@ async def list_documents(
     result = await db.execute(stmt)
     documents = result.scalars().all()
     return documents
+
+@router.post("/{document_id}/parse", response_model=ParsedDocument)
+async def parse_document(
+    document_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Parses the extracted text of a document into structured JSON using Gemini.
+    """
+    try:
+        parsed_data = await parser_service.parse_document(document_id, db)
+        return parsed_data
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
