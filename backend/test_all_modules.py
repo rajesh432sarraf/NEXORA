@@ -1,22 +1,25 @@
 import asyncio
+import uuid
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 
 async def test_all_new_modules():
+    uid = uuid.uuid4().hex[:6]
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         print("=== 1. Testing Auth & User Registration ===")
+        user_email = f"admin.{uid}@nexora.com"
         user_payload = {
-            "email": "admin.epc@nexora.com",
+            "email": user_email,
             "password": "SecurePassword123!",
             "full_name": "Chief EPC Director",
             "role": "ADMIN"
         }
         res = await client.post("/api/v1/auth/register", json=user_payload)
-        print("Register status:", res.status_code, res.json()["email"])
+        print("Register status:", res.status_code, res.json().get("email"))
         assert res.status_code == 201
 
         login_payload = {
-            "email": "admin.epc@nexora.com",
+            "email": user_email,
             "password": "SecurePassword123!"
         }
         res = await client.post("/api/v1/auth/login", json=login_payload)
@@ -32,7 +35,7 @@ async def test_all_new_modules():
 
         print("\n=== 2. Creating Sample EPC Project for Modules ===")
         project_payload = {
-            "project_name": "NEOM Green Hydrogen Plant",
+            "project_name": f"NEOM Green Hydrogen Plant {uid}",
             "client_name": "NEOM Energy",
             "location": "Tabuk, Saudi Arabia",
             "project_type": "Renewable Hydrogen EPC",
@@ -47,7 +50,7 @@ async def test_all_new_modules():
 
         print("\n=== 3. Testing RFQ Module ===")
         rfq_payload = {
-            "rfq_number": "RFQ-NEOM-2026-001",
+            "rfq_number": f"RFQ-NEOM-2026-{uid}",
             "title": "High Capacity Electrolyzer Units",
             "project_id": project_id,
             "budget": 120000000.0,
@@ -65,7 +68,7 @@ async def test_all_new_modules():
 
         print("\n=== 4. Testing Purchase Orders Module ===")
         po_payload = {
-            "po_number": "PO-NEOM-9901",
+            "po_number": f"PO-NEOM-{uid}",
             "project_id": project_id,
             "vendor_name": "Siemens Energy Global",
             "total_amount": 45000000.0,
@@ -126,7 +129,7 @@ async def test_all_new_modules():
         assert stats["total_projects"] >= 1
         assert stats["total_users"] >= 1
 
-        print("\nSUCCESS: All remaining platform modules (100% of rating table) implemented and verified!")
+        print("\nSUCCESS: All platform modules (100% of rating table) implemented and verified!")
 
 if __name__ == "__main__":
     asyncio.run(test_all_new_modules())
