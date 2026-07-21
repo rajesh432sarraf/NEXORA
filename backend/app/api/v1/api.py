@@ -12,7 +12,8 @@ from app.api.v1.endpoints import (
     compliance,
     vendor_evaluation,
     risk,
-    executive_insights
+    executive_insights,
+    copilot
 )
 
 api_router = APIRouter()
@@ -29,3 +30,4 @@ api_router.include_router(compliance.router, prefix="/compliance", tags=["compli
 api_router.include_router(vendor_evaluation.router, prefix="/vendor-evaluation", tags=["vendor-evaluation"])
 api_router.include_router(risk.router, prefix="/risk", tags=["risk"])
 api_router.include_router(executive_insights.router, prefix="/executive-insights", tags=["executive-insights"])
+api_router.include_router(copilot.router, prefix="/copilot", tags=["copilot"])
