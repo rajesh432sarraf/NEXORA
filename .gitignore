@@ -1,12 +1,11 @@
 # ==========================
-# Python
+# Python & Bytecode
 # ==========================
 __pycache__/
 *.py[cod]
-*.pyc
 *.pyo
 
-# Virtual Environment
+# Virtual Environments
 venv/
 .venv/
 env/
@@ -19,20 +18,19 @@ env/
 *.sqlite3
 backend/nexora.db
 
-# Generated Storage
+# Storage & Uploads
 backend/storage/
+uploads/
 
-# Vector DB
+# Vector DB Index
 faiss_index.bin
 faiss_metadata.json
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
-
-# OS
-.DS_Store
-Thumbs.db

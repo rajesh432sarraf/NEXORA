@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 
+import app.db.base
 from app.models.document import Document
 from app.schemas.compliance import ComplianceComparisonRequest
 from app.services.compliance.compliance_engine import ComplianceEngine
 from app.repositories.compliance_repository import JsonComplianceRepository
+
 
 async def test_compliance():
     # 1. Setup DB directly (sqlite+aiosqlite:///./nexora.db)
