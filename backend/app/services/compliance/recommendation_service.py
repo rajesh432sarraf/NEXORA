@@ -21,7 +21,7 @@ class RecommendationService:
         self.api_key = settings.GEMINI_API_KEY
         if genai and self.api_key and self.api_key != "your_gemini_api_key_here":
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
         else:
             self.model = None
 
