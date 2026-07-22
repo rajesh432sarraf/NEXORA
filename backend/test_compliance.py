@@ -40,13 +40,11 @@ async def test_compliance():
     async with async_session() as db:
         # Create dummy spec
         spec_doc = Document(
-            id=spec_id, filename="spec.pdf", content_type="application/pdf", file_size=100, file_path="dummy",
-            metadata_json=spec_metadata, status="PARSED", created_at=datetime.utcnow(), updated_at=datetime.utcnow()
+            id=spec_id, file_name="spec.pdf", file_mime_type="application/pdf", file_size_bytes=100, file_storage_url="dummy"
         )
         # Create dummy vendor
         vendor_doc = Document(
-            id=vendor_id, filename="vendor.pdf", content_type="application/pdf", file_size=100, file_path="dummy",
-            metadata_json=vendor_metadata, status="PARSED", created_at=datetime.utcnow(), updated_at=datetime.utcnow()
+            id=vendor_id, file_name="vendor.pdf", file_mime_type="application/pdf", file_size_bytes=100, file_storage_url="dummy"
         )
         db.add_all([spec_doc, vendor_doc])
         await db.commit()
