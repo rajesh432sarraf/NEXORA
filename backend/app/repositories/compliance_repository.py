@@ -3,7 +3,12 @@ import os
 import logging
 from typing import List, Optional
 from abc import ABC, abstractmethod
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from fastapi import Depends
+from app.db.session import get_db
 from app.schemas.compliance import ComplianceReport
+from app.models.ai_report import AIReport
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +85,44 @@ class JsonComplianceRepository(ComplianceRepository):
         data = self._load_data()
         return [ComplianceReport(**r) for r in data]
 
+class PostgresComplianceRepository(ComplianceRepository):
+    """PostgreSQL implementation of the Compliance storage."""
+    
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        
+    async def save_report(self, report: ComplianceReport) -> None:
+        stmt = select(AIReport).where(AIReport.report_id == report.report_id, AIReport.report_type == "compliance")
+        result = await self.db.execute(stmt)
+        existing_report = result.scalars().first()
+        
+        report_dict = report.model_dump(mode='json')
+        if existing_report:
+            existing_report.report_data = report_dict
+        else:
+            new_report = AIReport(
+                report_id=report.report_id,
+                report_type="compliance",
+                report_data=report_dict
+            )
+            self.db.add(new_report)
+            
+        await self.db.commit()
+
+    async def get_report(self, report_id: str) -> Optional[ComplianceReport]:
+        stmt = select(AIReport).where(AIReport.report_id == report_id, AIReport.report_type == "compliance")
+        result = await self.db.execute(stmt)
+        record = result.scalars().first()
+        if record:
+            return ComplianceReport(**record.report_data)
+        return None
+
+    async def get_all_reports(self) -> List[ComplianceReport]:
+        stmt = select(AIReport).where(AIReport.report_type == "compliance")
+        result = await self.db.execute(stmt)
+        records = result.scalars().all()
+        return [ComplianceReport(**record.report_data) for record in records]
+
 # Dependency injection helper
-def get_compliance_repository() -> ComplianceRepository:
-    return JsonComplianceRepository()
+def get_compliance_repository(db: AsyncSession = Depends(get_db)) -> ComplianceRepository:
+    return PostgresComplianceRepository(db)

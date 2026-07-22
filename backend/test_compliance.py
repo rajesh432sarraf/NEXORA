@@ -11,13 +11,13 @@ import app.db.base
 from app.models.document import Document
 from app.schemas.compliance import ComplianceComparisonRequest
 from app.services.compliance.compliance_engine import ComplianceEngine
-from app.repositories.compliance_repository import JsonComplianceRepository
+from app.repositories.compliance_repository import PostgresComplianceRepository
+from app.db.session import AsyncSessionLocal
 
 
 async def test_compliance():
-    # 1. Setup DB directly (sqlite+aiosqlite:///./nexora.db)
-    engine = create_async_engine("sqlite+aiosqlite:///./nexora.db")
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    # 1. Setup DB directly with Postgres session maker
+    async_session = AsyncSessionLocal
     
     spec_id = str(uuid.uuid4())
     vendor_id = str(uuid.uuid4())
@@ -41,13 +41,11 @@ async def test_compliance():
         # Create dummy spec
         spec_doc = Document(
             id=spec_id, filename="spec.pdf", content_type="application/pdf", file_size=100, file_path="dummy",
-            extracted_text="Spec text: Need HVAC Type A, 500kW Generator, 1MVA Transformer. 5 yrs warranty.",
             metadata_json=spec_metadata, status="PARSED", created_at=datetime.utcnow(), updated_at=datetime.utcnow()
         )
         # Create dummy vendor
         vendor_doc = Document(
             id=vendor_id, filename="vendor.pdf", content_type="application/pdf", file_size=100, file_path="dummy",
-            extracted_text="Vendor text: Offering HVAC Type A, 600kW Generator. No transformer. 3 yrs warranty.",
             metadata_json=vendor_metadata, status="PARSED", created_at=datetime.utcnow(), updated_at=datetime.utcnow()
         )
         db.add_all([spec_doc, vendor_doc])
@@ -57,11 +55,10 @@ async def test_compliance():
     print(f"Created Vendor Document: {vendor_id}")
     
     # 2. Run Compliance Engine
-    repo = JsonComplianceRepository()
-    engine_svc = ComplianceEngine(repo)
-    
     print("\nRunning Compliance Engine...")
     async with async_session() as db:
+        repo = PostgresComplianceRepository(db)
+        engine_svc = ComplianceEngine(repo)
         report = await engine_svc.generate_compliance_report(spec_id, vendor_id, db)
         
     print("\nReport Generated Successfully!")
@@ -71,7 +68,9 @@ async def test_compliance():
     print(f"Partial Matches: {[m.item for m in report.partial_matches]}")
     
     print("\nChecking History Repository...")
-    history = await repo.get_all_reports()
+    async with async_session() as db:
+        repo = PostgresComplianceRepository(db)
+        history = await repo.get_all_reports()
     print(f"Total reports in repository: {len(history)}")
 
 if __name__ == "__main__":

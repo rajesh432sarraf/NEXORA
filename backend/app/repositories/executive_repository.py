@@ -3,7 +3,12 @@ import os
 import logging
 from typing import List, Optional
 from abc import ABC, abstractmethod
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from fastapi import Depends
+from app.db.session import get_db
 from app.schemas.executive_insights import ExecutiveReport
+from app.models.ai_report import AIReport
 
 logger = logging.getLogger(__name__)
 
@@ -78,5 +83,43 @@ class JsonExecutiveRepository(ExecutiveRepository):
         data = self._load_data()
         return [ExecutiveReport(**r) for r in data]
 
-def get_executive_repository() -> ExecutiveRepository:
-    return JsonExecutiveRepository()
+class PostgresExecutiveRepository(ExecutiveRepository):
+    """PostgreSQL implementation of the Executive Insights storage."""
+    
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def save_report(self, report: ExecutiveReport) -> None:
+        stmt = select(AIReport).where(AIReport.report_id == report.report_id, AIReport.report_type == "executive")
+        result = await self.db.execute(stmt)
+        existing_report = result.scalars().first()
+        
+        report_dict = report.model_dump(mode='json')
+        if existing_report:
+            existing_report.report_data = report_dict
+        else:
+            new_report = AIReport(
+                report_id=report.report_id,
+                report_type="executive",
+                report_data=report_dict
+            )
+            self.db.add(new_report)
+            
+        await self.db.commit()
+
+    async def get_report(self, report_id: str) -> Optional[ExecutiveReport]:
+        stmt = select(AIReport).where(AIReport.report_id == report_id, AIReport.report_type == "executive")
+        result = await self.db.execute(stmt)
+        record = result.scalars().first()
+        if record:
+            return ExecutiveReport(**record.report_data)
+        return None
+
+    async def get_all_reports(self) -> List[ExecutiveReport]:
+        stmt = select(AIReport).where(AIReport.report_type == "executive")
+        result = await self.db.execute(stmt)
+        records = result.scalars().all()
+        return [ExecutiveReport(**record.report_data) for record in records]
+
+def get_executive_repository(db: AsyncSession = Depends(get_db)) -> ExecutiveRepository:
+    return PostgresExecutiveRepository(db)

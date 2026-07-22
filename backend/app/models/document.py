@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, DateTime, Boolean, Text, ForeignKey, BigInteger
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text, func
 from app.db.session import Base
@@ -7,9 +8,9 @@ import uuid
 class Document(Base):
     __tablename__ = 'documents'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    project_id = Column(String, ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
-    uploaded_by_user_id = Column(String, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
+    uploaded_by_user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     doc_type = Column(String(30), nullable=False, default="spec")
     file_name = Column(String(255), nullable=False)
     file_mime_type = Column(String(100), nullable=False)

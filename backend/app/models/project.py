@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Date, DateTime, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -7,8 +8,8 @@ import uuid
 class Project(Base):
     __tablename__ = 'projects'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    org_id = Column(String, ForeignKey('organizations.id', ondelete='CASCADE'), nullable=True) # made nullable for compat
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey('organizations.id', ondelete='CASCADE'), nullable=True) # made nullable for compat
     name = Column(String(200), nullable=False)
     description = Column(Text)
     start_date = Column(Date)

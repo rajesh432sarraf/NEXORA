@@ -3,7 +3,12 @@ import os
 import logging
 from typing import Optional
 from abc import ABC, abstractmethod
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from fastapi import Depends
+from app.db.session import get_db
 from app.schemas.copilot import SessionContext
+from app.models.ai_report import AIReport
 
 logger = logging.getLogger(__name__)
 
@@ -70,5 +75,48 @@ class JsonConversationRepository(ConversationRepository):
             return True
         return False
 
-def get_conversation_repository() -> ConversationRepository:
-    return JsonConversationRepository()
+class PostgresConversationRepository(ConversationRepository):
+    """PostgreSQL implementation of the conversation storage."""
+    
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def save_session(self, session: SessionContext) -> None:
+        stmt = select(AIReport).where(AIReport.report_id == session.session_id, AIReport.report_type == "conversation")
+        result = await self.db.execute(stmt)
+        existing_report = result.scalars().first()
+        
+        report_dict = session.model_dump(mode='json')
+        if existing_report:
+            existing_report.report_data = report_dict
+        else:
+            new_report = AIReport(
+                report_id=session.session_id,
+                report_type="conversation",
+                report_data=report_dict
+            )
+            self.db.add(new_report)
+            
+        await self.db.commit()
+
+    async def get_session(self, session_id: str) -> Optional[SessionContext]:
+        stmt = select(AIReport).where(AIReport.report_id == session_id, AIReport.report_type == "conversation")
+        result = await self.db.execute(stmt)
+        record = result.scalars().first()
+        if record:
+            return SessionContext(**record.report_data)
+        return None
+
+    async def delete_session(self, session_id: str) -> bool:
+        stmt = select(AIReport).where(AIReport.report_id == session_id, AIReport.report_type == "conversation")
+        result = await self.db.execute(stmt)
+        record = result.scalars().first()
+        if record:
+            await self.db.delete(record)
+            await self.db.commit()
+            return True
+        return False
+
+
+def get_conversation_repository(db: AsyncSession = Depends(get_db)) -> ConversationRepository:
+    return PostgresConversationRepository(db)

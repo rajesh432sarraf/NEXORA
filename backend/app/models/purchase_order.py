@@ -1,16 +1,17 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Date
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
 
 class PurchaseOrder(Base):
-    __tablename__ = 'proposals'
+    __tablename__ = 'purchase_orders'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    rfq_id = Column(String, ForeignKey('rfqs.id', ondelete='CASCADE'), nullable=False)
-    vendor_id = Column(String, ForeignKey('vendors.id', ondelete='RESTRICT'), nullable=True) # nullable for compat if not loaded
-    proposal_document_id = Column(String, ForeignKey('documents.id', ondelete='RESTRICT'), nullable=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rfq_id = Column(UUID(as_uuid=True), ForeignKey('rfqs.id', ondelete='CASCADE'), nullable=False)
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey('vendors.id', ondelete='RESTRICT'), nullable=True) # nullable for compat if not loaded
+    proposal_document_id = Column(UUID(as_uuid=True), ForeignKey('documents.id', ondelete='RESTRICT'), nullable=True)
     submitted_at = Column(DateTime(True))
     status = Column(String(20), nullable=False, server_default=text("'draft'::character varying"))
     created_at = Column(DateTime(True), nullable=False, server_default=text("now()"))

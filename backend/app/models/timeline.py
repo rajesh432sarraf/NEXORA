@@ -1,14 +1,15 @@
 from sqlalchemy import Column, String, Date, DateTime, Text, ForeignKey, Integer
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
 
 class Milestone(Base):
-    __tablename__ = 'schedule_predictions'
+    __tablename__ = 'milestones'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id = Column(String, ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     milestone_name = Column(String(200), nullable=False)
     original_date = Column(Date)
     predicted_date = Column(Date)

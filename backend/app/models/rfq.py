@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Date, DateTime, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -7,9 +8,9 @@ import uuid
 class RFQ(Base):
     __tablename__ = 'rfqs'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id = Column(String, ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    rfq_document_id = Column(String, ForeignKey('documents.id', ondelete='RESTRICT'), nullable=True) # nullable for compat
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    rfq_document_id = Column(UUID(as_uuid=True), ForeignKey('documents.id', ondelete='RESTRICT'), nullable=True) # nullable for compat
     title = Column(String(200), nullable=False, default="Untitled RFQ")
     description = Column(Text)
     issue_date = Column(Date, nullable=False, server_default=text("CURRENT_DATE"))

@@ -1,14 +1,15 @@
 from sqlalchemy import Column, String, Numeric, DateTime, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
 
 class ProcurementItem(Base):
-    __tablename__ = 'boq_items'
+    __tablename__ = 'procurement_items'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    document_id = Column(String, ForeignKey('documents.id', ondelete='CASCADE'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id = Column(UUID(as_uuid=True), ForeignKey('documents.id', ondelete='CASCADE'), nullable=False)
     item_code = Column(String(100))
     description = Column(Text, nullable=False)
     unit = Column(String(30))
