@@ -1,6 +1,8 @@
 import psycopg2
+import os
 
-conn = psycopg2.connect("postgresql://postgres:%40nkiT1775@127.0.0.1:5432/procurement")
+db_url = os.environ.get("SYNC_DATABASE_URL", "postgresql://postgres:%40nkiT1775@127.0.0.1:5432/procurement")
+conn = psycopg2.connect(db_url)
 cur = conn.cursor()
 
 # Check all FK column types in existing tables that reference uuid-typed PKs
