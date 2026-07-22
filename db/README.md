@@ -1,4 +1,4 @@
-# NEXORA Database
+# Procurement Database (NEXORA project)
 
 PostgreSQL schema for the EPC Project Intelligence platform — unifies project
 documents, specifications, schedules, procurement data, and quality records
@@ -6,7 +6,7 @@ into a queryable backend for the AI intelligence and multi-agent layer.
 
 ## Setup
 
-1. Create a database named `NEXORA` in PostgreSQL.
+1. Create a database named `procurement` in PostgreSQL.
 2. Run the migration files in `db/migrations/` **in strict numeric order**,
    01 through 20. Some later files depend on tables created earlier
    (e.g. `15_extracted_entities.sql` requires `14_document_chunks.sql` to
@@ -16,8 +16,8 @@ into a queryable backend for the AI intelligence and multi-agent layer.
    useful for testing the portals and dashboard before real data exists.
 
 ```bash
-psql -U <username> -d NEXORA -f db/migrations/01_create_extension.sql
-psql -U <username> -d NEXORA -f db/migrations/02_organizations.sql
+psql -U <username> -d procurement -f db/migrations/01_create_extension.sql
+psql -U <username> -d procurement -f db/migrations/02_organizations.sql
 # ...continue through 20_ai_layer_indexes.sql in order
 ```
 
@@ -66,7 +66,7 @@ Supporting indexes for all tables introduced in 11–19. Must run last.
 ## Notes for backend integration
 
 - Connect via a standard Postgres connection string:
-  `postgresql://<user>:<password>@<host>:<port>/NEXORA`
+  `postgresql://<user>:<password>@<host>:<port>/procurement`
 - The schema uses `UUID` primary keys (via the `uuid-ossp` extension),
   `JSONB` for flexible fields, and `CHECK` constraints in place of enums —
   most ORMs (Prisma, SQLAlchemy, etc.) can introspect this directly.
