@@ -28,7 +28,7 @@ class UserService:
             email=user_in.email,
             hashed_password=hash_password(user_in.password),
             full_name=user_in.full_name,
-            role=user_in.role or "PROJECT_MANAGER"
+            role=user_in.role or "org_user"
         )
         db.add(db_user)
         await db.commit()

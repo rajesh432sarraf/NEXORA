@@ -5,9 +5,9 @@ services:
     image: postgres:15
     container_name: nexora_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-nexora_user}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexora_pass}
-      POSTGRES_DB: ${POSTGRES_DB:-nexora_db}
+      POSTGRES_DB: ${POSTGRES_DB:-procurement}
     ports:
       - "5432:5432"
     volumes:

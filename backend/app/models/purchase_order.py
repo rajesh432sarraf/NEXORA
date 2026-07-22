@@ -1,23 +1,55 @@
-from sqlalchemy import Column, String, Float, DateTime, Text, ForeignKey, Date
-from sqlalchemy.sql import func
+from sqlalchemy import Column, String, DateTime, ForeignKey, Date
+from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
 
 class PurchaseOrder(Base):
-    __tablename__ = "purchase_orders"
+    __tablename__ = 'proposals'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    po_number = Column(String, unique=True, index=True, nullable=False)
-    project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
-    vendor_name = Column(String, nullable=False)
-    total_amount = Column(Float, nullable=False)
-    status = Column(String, default="ISSUED", nullable=False)
-    issued_date = Column(Date, nullable=True)
-    delivery_date = Column(Date, nullable=True)
-    notes = Column(Text, nullable=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    rfq_id = Column(String, ForeignKey('rfqs.id', ondelete='CASCADE'), nullable=False)
+    vendor_id = Column(String, ForeignKey('vendors.id', ondelete='RESTRICT'), nullable=True) # nullable for compat if not loaded
+    proposal_document_id = Column(String, ForeignKey('documents.id', ondelete='RESTRICT'), nullable=True)
+    submitted_at = Column(DateTime(True))
+    status = Column(String(20), nullable=False, server_default=text("'draft'::character varying"))
+    created_at = Column(DateTime(True), nullable=False, server_default=text("now()"))
+    updated_at = Column(DateTime(True), nullable=False, server_default=text("now()"))
 
-    project = relationship("Project", backref="purchase_orders")
+    rfq = relationship('RFQ', backref='proposals')
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Backward compatibility
+    @property
+    def po_number(self): return self.id
+    @po_number.setter
+    def po_number(self, val): pass
+
+    @property
+    def project_id(self): return None
+    @project_id.setter
+    def project_id(self, val): pass
+
+    @property
+    def vendor_name(self): return "Unknown Vendor"
+    @vendor_name.setter
+    def vendor_name(self, val): pass
+
+    @property
+    def total_amount(self): return 0.0
+    @total_amount.setter
+    def total_amount(self, val): pass
+
+    @property
+    def issued_date(self): return self.submitted_at
+    @issued_date.setter
+    def issued_date(self, val): self.submitted_at = val
+
+    @property
+    def delivery_date(self): return None
+    @delivery_date.setter
+    def delivery_date(self, val): pass
+
+    @property
+    def notes(self): return None
+    @notes.setter
+    def notes(self, val): pass

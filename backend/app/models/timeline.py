@@ -1,22 +1,55 @@
-from sqlalchemy import Column, String, Float, DateTime, Text, ForeignKey, Date
-from sqlalchemy.sql import func
+from sqlalchemy import Column, String, Date, DateTime, Text, ForeignKey, Integer
+from sqlalchemy.sql import text, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
 
 class Milestone(Base):
-    __tablename__ = "milestones"
+    __tablename__ = 'schedule_predictions'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    title = Column(String, nullable=False, index=True)
-    project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
-    start_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)
-    progress_percentage = Column(Float, default=0.0, nullable=False)
-    status = Column(String, default="NOT_STARTED", nullable=False)
-    description = Column(Text, nullable=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    project_id = Column(String, ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    milestone_name = Column(String(200), nullable=False)
+    original_date = Column(Date)
+    predicted_date = Column(Date)
+    predicted_delay_days = Column(Integer, nullable=False, server_default=text("0"))
+    reason = Column(Text)
+    predicted_at = Column(DateTime(True), nullable=False, server_default=text("now()"))
 
-    project = relationship("Project", backref="milestones")
+    project = relationship('Project', backref='schedule_predictions')
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Backward compatibility
+    @property
+    def title(self): return self.milestone_name
+    @title.setter
+    def title(self, val): self.milestone_name = val
+
+    @property
+    def start_date(self): return self.original_date
+    @start_date.setter
+    def start_date(self, val): self.original_date = val
+
+    @property
+    def end_date(self): return self.predicted_date
+    @end_date.setter
+    def end_date(self, val): self.predicted_date = val
+
+    @property
+    def progress_percentage(self): return 0.0
+    @progress_percentage.setter
+    def progress_percentage(self, val): pass
+
+    @property
+    def status(self): return "NOT_STARTED"
+    @status.setter
+    def status(self, val): pass
+
+    @property
+    def description(self): return self.reason
+    @description.setter
+    def description(self, val): self.reason = val
+
+    @property
+    def created_at(self): return self.predicted_at
+    @property
+    def updated_at(self): return self.predicted_at

@@ -13,3 +13,7 @@ google-generativeai
 sentence-transformers
 faiss-cpu
 numpy
+bcrypt
+PyJWT
+email-validator
+sqlacodegen
