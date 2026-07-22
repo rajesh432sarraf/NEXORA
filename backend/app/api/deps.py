@@ -29,6 +29,10 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token subject")
         
+    # HACKATHON FAST FIX - Bypass DB for hardcoded admin
+    if str(user_id) == "00000000-0000-0000-0000-000000000000":
+        return User(id="00000000-0000-0000-0000-000000000000", email="admin@nexora.com", first_name="Admin", last_name="User", role="admin", is_active=True)
+        
     user = await UserService.get_user_by_id(db, user_id=user_id)
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive or not found")
