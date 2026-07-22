@@ -3,7 +3,7 @@ from sqlalchemy import Boolean, CheckConstraint, Column, Date, DateTime, Foreign
 from sqlalchemy.orm import declarative_base, relationship
 import uuid
 
-Base = declarative_base()
+from app.db.session import Base
 
 class Organization(Base):
     __tablename__ = 'organizations'
