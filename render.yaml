@@ -19,5 +19,4 @@ services:
 databases:
   - name: procurement-db
     databaseName: procurement
-    user: postgres
     plan: free
