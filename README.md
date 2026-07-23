@@ -233,6 +233,3 @@ Before production deployment, ensure that:
 
 NEXORA has the core product structure and AI modules in place, but it should be treated as an active development project. Validate the complete authentication, database migration, frontend build, and AI-feature flows before presenting it as production-ready.
 
-## License
-
-No license has been declared yet. Add a `LICENSE` file before public distribution.
