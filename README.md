@@ -233,3 +233,12 @@ Before production deployment, ensure that:
 
 NEXORA has the core product structure and AI modules in place, but it should be treated as an active development project. Validate the complete authentication, database migration, frontend build, and AI-feature flows before presenting it as production-ready.
 
+
+## Team
+
+| Name | GitHub |
+| --- | --- |
+| Divyanshu Raj | [@084divyanshuraj](https://github.com/084divyanshuraj) |
+| Rajesh Kumar | [@rajesh432sarraf](https://github.com/rajesh432sarraf) |
+| Ankit Sinha | [@aspect077](https://github.com/aspect077) |
+| Md Asad Raza | [@Raza786-asad](https://github.com/Raza786-asad) |
